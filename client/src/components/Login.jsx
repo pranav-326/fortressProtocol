@@ -25,7 +25,7 @@ const Login = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-[85vh] relative">
+        <div className="flex items-center justify-center w-full relative">
             {/* Background Glows */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyber-accent rounded-full blur-[150px] opacity-10 pointer-events-none"></div>
 

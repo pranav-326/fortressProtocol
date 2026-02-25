@@ -20,7 +20,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/admin" element={<AdminCreateTeam />} />
           <Route path="*" element={
-            <div className="min-h-screen bg-cyber-bg text-gray-200 font-sans selection:bg-cyber-accent selection:text-black p-4">
+            <div className="min-h-screen flex items-center justify-center bg-cyber-bg text-gray-200 font-sans selection:bg-cyber-accent selection:text-black p-4">
               <Login />
             </div>
           } />
