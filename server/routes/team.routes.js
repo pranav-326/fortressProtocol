@@ -85,4 +85,53 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Buy defense
+router.post('/buy', async (req, res) => {
+  try {
+    const { teamId, defenseId, price } = req.body;
+    if (!teamId || !defenseId || price === undefined) {
+      return res.status(400).json({ error: 'Missing teamId, defenseId, or price' });
+    }
+
+    const teamRef = db.collection('teams').doc(teamId);
+
+    const result = await db.runTransaction(async (tx) => {
+      const tSnap = await tx.get(teamRef);
+      if (!tSnap.exists) {
+        throw new Error('Team not found');
+      }
+
+      const team = tSnap.data();
+      const currentCoins = typeof team.coins === 'number' ? team.coins : 0;
+      const defenses = Array.isArray(team.defenses) ? team.defenses : [];
+
+      if (currentCoins < price) {
+        throw new Error('Insufficient coins');
+      }
+
+      if (defenses.includes(defenseId)) {
+        throw new Error('Defense already purchased');
+      }
+
+      const newCoins = currentCoins - price;
+      const newDefenses = [...defenses, defenseId];
+
+      tx.update(teamRef, {
+        coins: newCoins,
+        defenses: newDefenses
+      });
+
+      return { coins: newCoins, defenses: newDefenses };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('Buy error:', err);
+    if (err.message === 'Team not found' || err.message === 'Insufficient coins' || err.message === 'Defense already purchased') {
+      return res.status(400).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
