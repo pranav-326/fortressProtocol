@@ -10,7 +10,11 @@ import { startAttackScheduler } from './services/attackEngine.js';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key'],
+}));
 app.use(express.json());
 
 const PORT = process.env.PORT || 5001;

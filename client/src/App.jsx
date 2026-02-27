@@ -20,7 +20,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/admin" element={<AdminCreateTeam />} />
           <Route path="*" element={
-            <div className="min-h-screen flex items-center justify-center bg-cyber-bg text-gray-200 font-sans selection:bg-cyber-accent selection:text-black p-4">
+            <div className="min-h-screen w-full flex items-center justify-center bg-cyber-bg cyber-bg-image cyber-grid-overlay cyber-scanline text-gray-200 font-sans selection:bg-cyber-accent selection:text-black p-4">
               <Login />
             </div>
           } />
@@ -45,7 +45,7 @@ const AppContent = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-cyber-bg text-gray-200 font-sans selection:bg-cyber-accent selection:text-black">
+      <div className="min-h-screen bg-cyber-bg cyber-bg-image cyber-grid-overlay cyber-scanline text-gray-200 font-sans selection:bg-cyber-accent selection:text-black">
         {/* Navigation / Header */}
         <nav className="sticky top-0 z-50 bg-cyber-surface/80 border-b border-white/5 backdrop-blur-xl shrink-0">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
