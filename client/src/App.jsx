@@ -8,7 +8,7 @@ import AdminCreateTeam from './components/AdminCreateTeam';
 import { GameProvider, useGame } from './context/GameContext';
 
 const AppContent = () => {
-  const { team, gameState, loading, logout } = useGame();
+  const { team, gameState, currentAttack, loading, logout } = useGame();
 
   if (loading) {
     return <div className="min-h-screen bg-cyber-bg flex items-center justify-center text-cyber-accent">Loading Terminals...</div>;
@@ -20,7 +20,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/admin" element={<AdminCreateTeam />} />
           <Route path="*" element={
-            <div className="min-h-screen bg-cyber-bg text-gray-200 font-sans selection:bg-cyber-accent selection:text-black p-4">
+            <div className="min-h-screen w-full flex items-center justify-center bg-cyber-bg cyber-bg-image cyber-grid-overlay cyber-scanline text-gray-200 font-sans selection:bg-cyber-accent selection:text-black p-4">
               <Login />
             </div>
           } />
@@ -29,21 +29,23 @@ const AppContent = () => {
     );
   }
 
-  // Active attack is triggered globally when gameState has an attack ID
-  // and the team hasn't already responded. Only check on the frontend for rendering; 
-  // backend checks validity on submission.
-  const isAttackActive = gameState?.currentAttackId && team?.lastRespondedAttackId !== gameState?.currentAttackId;
+  // Active attack is triggered globally when gameState has an attack ID,
+  // the team hasn't already responded, and the attack document has been fetched.
+  const isAttackActive = gameState?.currentAttackId
+    && team?.lastRespondedAttackId !== gameState?.currentAttackId
+    && currentAttack?.id === gameState?.currentAttackId;
 
-  // mock the attack object for the modal based on what's assumed about the attack payload
+  // Use the real attack data from Firestore instead of hardcoded values
   const activeAttackData = isAttackActive ? {
-    id: gameState.currentAttackId,
-    title: "DDoS Attack Detected", // could pull from gameState
-    requiredDefense: "Cloudflare Pro"
+    id: currentAttack.id,
+    title: currentAttack.name,
+    description: currentAttack.description || '',
+    responseWindow: currentAttack.responseWindow || 45
   } : null;
 
   return (
     <Router>
-      <div className="min-h-screen bg-cyber-bg text-gray-200 font-sans selection:bg-cyber-accent selection:text-black">
+      <div className="min-h-screen bg-cyber-bg cyber-bg-image cyber-grid-overlay cyber-scanline text-gray-200 font-sans selection:bg-cyber-accent selection:text-black">
         {/* Navigation / Header */}
         <nav className="sticky top-0 z-50 bg-cyber-surface/80 border-b border-white/5 backdrop-blur-xl shrink-0">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -100,8 +102,8 @@ const AppContent = () => {
         {/* Attack Modal (Global Overlay) */}
         {activeAttackData && (
           <AttackModal
+            key={activeAttackData.id}
             attack={activeAttackData}
-            // Close action is essentially handled by a successful response returning a new lastRespondedAttackId internally
             onClose={() => { }}
           />
         )}

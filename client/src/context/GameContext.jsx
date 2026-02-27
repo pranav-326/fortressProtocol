@@ -9,6 +9,7 @@ export const useGame = () => useContext(GameContext);
 export const GameProvider = ({ children }) => {
     const [team, setTeam] = useState(null);
     const [gameState, setGameState] = useState(null);
+    const [currentAttack, setCurrentAttack] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const backendUrl = import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:5001';
@@ -63,6 +64,30 @@ export const GameProvider = ({ children }) => {
 
         return () => unsubGame();
     }, []);
+
+    // Listen to the current attack document for real-time attack data
+    useEffect(() => {
+        if (!gameState?.currentAttackId) {
+            setCurrentAttack(null);
+            return;
+        }
+
+        const unsubAttack = onSnapshot(
+            doc(db, 'attacks', gameState.currentAttackId),
+            (docSnap) => {
+                if (docSnap.exists()) {
+                    setCurrentAttack({ id: docSnap.id, ...docSnap.data() });
+                } else {
+                    setCurrentAttack(null);
+                }
+            },
+            (error) => {
+                console.error('Firebase attack snapshot error:', error.message);
+            }
+        );
+
+        return () => unsubAttack();
+    }, [gameState?.currentAttackId]);
 
     const login = async (name, password) => {
         try {
@@ -151,7 +176,7 @@ export const GameProvider = ({ children }) => {
     };
 
     return (
-        <GameContext.Provider value={{ team, gameState, loading, login, logout, buyDefense, respondToAttack }}>
+        <GameContext.Provider value={{ team, gameState, currentAttack, loading, login, logout, buyDefense, respondToAttack }}>
             {children}
         </GameContext.Provider>
     );

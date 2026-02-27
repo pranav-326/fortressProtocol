@@ -6,7 +6,7 @@ import { useGame } from '../context/GameContext';
 const AttackModal = ({ attack, onClose }) => {
     const { team, respondToAttack } = useGame();
     // Use the backend timer if possible, otherwise fallback to 45s default
-    const [timeLeft, setTimeLeft] = useState(45);
+    const [timeLeft, setTimeLeft] = useState(attack.responseWindow || 45);
     const [selectedDefense, setSelectedDefense] = useState(null);
     const [status, setStatus] = useState('pending'); // pending, success, partial, failed
     const [backendResult, setBackendResult] = useState(null);
@@ -106,6 +106,9 @@ const AttackModal = ({ attack, onClose }) => {
                         <div className="text-center">
                             <h3 className="text-sm text-gray-400 font-bold uppercase tracking-[0.3em] pl-1 mb-2">Threat Signature:</h3>
                             <p className="text-5xl font-bold text-white tracking-widest text-shadow-neon uppercase">{attack.title}</p>
+                            {attack.description && (
+                                <p className="text-gray-400 text-sm mt-3 max-w-lg mx-auto">{attack.description}</p>
+                            )}
                         </div>
 
                         {status === 'pending' && (
