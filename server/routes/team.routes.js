@@ -14,7 +14,7 @@ function sanitizeTeam(doc) {
     coins: data.coins,
     score: data.score,
     vaults: data.vaults,
-    defenses: data.defenses || [],
+    defenses: data.defenses || {},
     createdAt: data.createdAt || null
   };
 }
@@ -47,7 +47,7 @@ router.post('/create', async (req, res) => {
       coins: 1000,
       score: 0,
       vaults: { vault1: 'safe', vault2: 'safe' },
-      defenses: [],
+      defenses: {},
       createdAt: new Date().toISOString()
     };
 
@@ -102,18 +102,33 @@ router.post('/buy', async (req, res) => {
 
       const team = tSnap.data();
       const currentCoins = typeof team.coins === 'number' ? team.coins : 0;
-      const defenses = Array.isArray(team.defenses) ? team.defenses : [];
 
-      if (currentCoins < price) {
+      // Use an object for defenses: { 'firewall': 1, 'antivirus': 2 }
+      const defenses = team.defenses && typeof team.defenses === 'object' && !Array.isArray(team.defenses)
+        ? team.defenses
+        : {}; // Fallback if it's an old array format, we can migrate it lazily by overwriting or resetting. 
+      // To handle old accounts gracefully, we can map arrays:
+      let safeDefenses = { ...defenses };
+      if (Array.isArray(team.defenses)) {
+        safeDefenses = {};
+        team.defenses.forEach(d => safeDefenses[d] = 1);
+      }
+
+      const currentLevel = safeDefenses[defenseId] || 0;
+      if (currentLevel >= 3) {
+        throw new Error('Defense is already at max level');
+      }
+
+      let finalPrice = price;
+      if (currentLevel === 1) finalPrice = Math.floor(price * 1.5);
+      else if (currentLevel === 2) finalPrice = Math.floor(price * 2);
+
+      if (currentCoins < finalPrice) {
         throw new Error('Insufficient coins');
       }
 
-      if (defenses.includes(defenseId)) {
-        throw new Error('Defense already purchased');
-      }
-
-      const newCoins = currentCoins - price;
-      const newDefenses = [...defenses, defenseId];
+      const newCoins = currentCoins - finalPrice;
+      const newDefenses = { ...safeDefenses, [defenseId]: currentLevel + 1 };
 
       tx.update(teamRef, {
         coins: newCoins,
