@@ -31,7 +31,6 @@ router.post('/create', async (req, res) => {
     if (!name || !password) {
       return res.status(400).json({ error: 'Missing name or password' });
     }
-
     // ensure unique team name
     const existing = await db.collection('teams').where('name', '==', name).limit(1).get();
     if (!existing.empty) {
