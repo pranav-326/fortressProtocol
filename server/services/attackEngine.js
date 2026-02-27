@@ -97,3 +97,50 @@ export function startAttackScheduler() {
 	return job;
 }
 
+let healthJob = null;
+
+export function startHealthScheduler() {
+	if (healthJob) return healthJob;
+
+	// Schedule every 5 minutes
+	healthJob = cron.schedule('*/5 * * * *', async () => {
+		try {
+			const gsRef = db.collection('gameState').doc('main');
+			const gsSnap = await gsRef.get();
+			const gs = gsSnap.exists ? gsSnap.data() : null;
+
+			// Skip if game not running
+			if (!gs || gs.status !== 'running') return;
+
+			// Get all teams
+			const teamsSnap = await db.collection('teams').get();
+
+			const batch = db.batch();
+			let count = 0;
+
+			teamsSnap.forEach(doc => {
+				const team = doc.data();
+				const health = typeof team.health === 'number' ? team.health : 100;
+
+				// Only heal if they are still alive (health > 0) and not full (< 100)
+				// If health is 0, they lost a vault and are reset differently, or are dead.
+				if (health > 0 && health < 100) {
+					const newHealth = Math.min(100, health + 10);
+					batch.update(doc.ref, { health: newHealth });
+					count++;
+				}
+			});
+
+			if (count > 0) {
+				await batch.commit();
+				console.log(`Regenerated health for ${count} teams`);
+			}
+
+		} catch (err) {
+			console.error('Health scheduler error:', err);
+		}
+	}, { scheduled: false });
+
+	healthJob.start();
+	return healthJob;
+}

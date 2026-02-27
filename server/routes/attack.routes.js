@@ -38,50 +38,70 @@ router.post('/respond', async (req, res) => {
         throw new Error('Already responded to this attack');
       }
 
-      const defenses = Array.isArray(team.defenses) ? team.defenses : [];
+      // Use an object for defenses to support levels
+      const defenses = team.defenses && typeof team.defenses === 'object' && !Array.isArray(team.defenses)
+        ? team.defenses
+        : {};
+      let safeDefenses = { ...defenses };
+      if (Array.isArray(team.defenses)) {
+        safeDefenses = {};
+        team.defenses.forEach(d => safeDefenses[d] = 1);
+      }
+
       const rewards = { points: attack.rewardPoints || 0, coins: attack.rewardCoins || 0 };
 
       let outcome = 'failed';
       let newHealth = typeof team.health === 'number' ? team.health : 100;
       let newScore = typeof team.score === 'number' ? team.score : 0;
       let newCoins = typeof team.coins === 'number' ? team.coins : 0;
+      let newVaults = { ...(team.vaults || {}) };
 
-      const ownsDefense = defenses.some(
-        d => d.toLowerCase().trim() === attack.correctDefense.toLowerCase().trim()
-      );
+      const attackDefenseId = attack.correctDefense.toLowerCase().trim();
+      const selectedDefenseId = selectedDefense ? selectedDefense.toLowerCase().trim() : null;
+      const ownedLevel = safeDefenses[attackDefenseId] || 0;
 
-      if (ownsDefense) {
+      if (ownedLevel > 0) {
         outcome = 'success';
-        newCoins += rewards.coins;
-        newScore += rewards.points;
-      } else if (
-        selectedDefense &&
-        selectedDefense.toLowerCase().trim() ===
-        attack.correctDefense.toLowerCase().trim()
-      ) {
+        const multiplier = ownedLevel === 1 ? 1 : (ownedLevel === 2 ? 1.5 : 2.0);
+        newCoins += Math.floor(rewards.coins * multiplier);
+        newScore += Math.floor(rewards.points * multiplier);
+      } else if (selectedDefenseId === attackDefenseId) {
         outcome = 'partial';
-        newCoins += Math.floor(rewards.coins * 0.7);
-        newScore += Math.floor(rewards.points * 0.7);
+        newCoins += Math.floor(rewards.coins * 0.3);
+        newScore += Math.floor(rewards.points * 0.3);
       } else {
         outcome = 'failed';
-        const damage = attack.damage || 0;
-        newHealth = newHealth - damage;
-        const scorePenalty = Math.ceil(damage * 0.5);
-        newScore = newScore - scorePenalty;
+        // Reduce health by flat 30 points (equivalent to 30% of max 100)
+        newHealth -= 30;
+        const scorePenalty = Math.ceil((attack.damage || 0) * 0.5);
+        newScore -= scorePenalty;
       }
 
-      // death handling
+      // Vault deletion handling
       if (newHealth <= 0) {
-        const floor = Math.max(30, Math.ceil((attack.damage || 0) * 0.5));
-        newHealth = floor;
+        const vaultKeys = Object.keys(newVaults);
+        if (vaultKeys.length > 0) {
+          // Delete the first available vault
+          delete newVaults[vaultKeys[0]];
+
+          if (Object.keys(newVaults).length > 0) {
+            newHealth = 100; // Reset health if they still have vaults left
+          } else {
+            newHealth = 0; // Total failure
+          }
+        } else {
+          newHealth = 0;
+        }
+
         const extraPenalty = Math.ceil((attack.rewardPoints || 0) * 0.5);
-        newScore = newScore - extraPenalty;
+        newScore -= extraPenalty;
       }
 
       const updated = {
         health: newHealth,
         score: newScore,
         coins: newCoins,
+        vaults: newVaults,
         lastRespondedAttackId: currentAttackId,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };

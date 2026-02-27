@@ -159,13 +159,14 @@ export const GameProvider = ({ children }) => {
 
         const data = await res.json();
 
-        // Optimistically update the UI to reflect new health, coins, score, and close the modal
+        // Optimistically update the UI to reflect new health, coins, score, vaults, and close the modal
         setTeam(prev => {
             const updated = {
                 ...prev,
                 health: data.health,
                 coins: data.coins,
                 score: data.score,
+                vaults: data.vaults || prev.vaults,
                 lastRespondedAttackId: data.lastRespondedAttackId
             };
             localStorage.setItem('fortress_team', JSON.stringify(updated));

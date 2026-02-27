@@ -13,7 +13,7 @@ import { db } from './config/firebase.js';
 import teamRoutes from './routes/team.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import attackRoutes from './routes/attack.routes.js';
-import { startAttackScheduler } from './services/attackEngine.js';
+import { startAttackScheduler, startHealthScheduler } from './services/attackEngine.js';
 
 // dotenv already loaded above
 
@@ -45,6 +45,7 @@ app.use('/attack', attackRoutes);
 
 // start scheduler (only if desired) — scheduler is exported and controlled
 startAttackScheduler();
+startHealthScheduler();
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
