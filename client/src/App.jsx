@@ -6,6 +6,7 @@ import AttackModal from './components/AttackModal';
 import Login from './components/Login';
 import AdminCreateTeam from './components/AdminCreateTeam';
 import { GameProvider, useGame } from './context/GameContext';
+import Logo from './assets/fortress-logo1.svg';
 
 const AppContent = () => {
   const { team, gameState, currentAttack, loading, logout } = useGame();
@@ -21,6 +22,9 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminCreateTeam />} />
           <Route path="*" element={
             <div className="min-h-screen w-full flex items-center justify-center bg-cyber-bg cyber-bg-image cyber-grid-overlay cyber-scanline text-gray-200 font-sans selection:bg-cyber-accent selection:text-black p-4">
+              <Link to="/" className="fixed top-4 left-4 z-60 transform-gpu transition-all hover:scale-105" aria-label="Home">
+                <img src={Logo} alt="Fortress" className="w-12 h-12 rounded-full bg-white/90 p-1 shadow-lg" />
+              </Link>
               <Login />
             </div>
           } />
@@ -46,6 +50,10 @@ const AppContent = () => {
   return (
     <Router>
       <div className="min-h-screen bg-cyber-bg cyber-bg-image cyber-grid-overlay cyber-scanline text-gray-200 font-sans selection:bg-cyber-accent selection:text-black">
+        {/* Fixed top-left logo visible on all pages */}
+        <Link to="/" className="fixed top-4 left-4 z-60 transform-gpu transition-all hover:scale-105" aria-label="Home">
+          <img src={Logo} alt="Fortress" className="w-12 h-12 rounded-full bg-white/90 p-1 shadow-lg" />
+        </Link>
         {/* Navigation / Header */}
         <nav className="sticky top-0 z-50 bg-cyber-surface/80 border-b border-white/5 backdrop-blur-xl shrink-0">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">

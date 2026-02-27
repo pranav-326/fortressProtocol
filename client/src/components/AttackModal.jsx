@@ -47,14 +47,20 @@ const AttackModal = ({ attack, onClose }) => {
         }
     };
 
-    // Options map to the exact backend IDs
-    const options = [
-        { id: 'email-filter', label: 'Advanced Email Filter' },
-        { id: 'rate-limit', label: 'Traffic Rate Limiter' },
-        { id: 'input-sanitization', label: 'Query Sanitizer' },
-        { id: 'backup-restore', label: 'Immutable Backups' },
-        { id: 'patch-management', label: 'Zero-Day Patching' }
-    ];
+    // Label map for display names
+    const defenseLabels = {
+        'email-filter': 'Advanced Email Filter',
+        'rate-limit': 'Traffic Rate Limiter',
+        'input-sanitization': 'Query Sanitizer',
+        'backup-restore': 'Immutable Backups',
+        'patch-management': 'Zero-Day Patching'
+    };
+
+    // Only show defenses the team has purchased
+    const options = (team?.defenses || []).map(id => ({
+        id,
+        label: defenseLabels[id] || id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    }));
 
     return (
         <AnimatePresence>
